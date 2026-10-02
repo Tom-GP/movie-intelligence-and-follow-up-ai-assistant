@@ -1,0 +1,10 @@
+streamlit
+pydantic
+python-dotenv
+pysrt
+chromadb
+sentence-transformers
+openai
+anthropic
+mcp
+pytest

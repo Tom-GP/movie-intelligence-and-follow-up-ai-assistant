@@ -1,0 +1,15 @@
+# Secrets
+.env
+
+# Virtual environment
+.venv/
+venv/
+
+# Python junk
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Generated data
+data/chroma_db/
+data/processed/
