@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 
 # The project root is the folder that contains "config/".
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# print(PROJECT_ROOT)
 
 # Read the .env file and put its values into the environment.
 load_dotenv(PROJECT_ROOT / ".env")
@@ -21,6 +20,13 @@ def _get_str(name: str, default: str = "") -> str:
 def _get_int(name: str, default: int) -> int:
     value = _get_str(name)
     return int(value) if value else default
+
+
+def _get_bool(name: str, default: bool) -> bool:
+    value = _get_str(name).lower()
+    if not value:
+        return default
+    return value in {"1", "true", "yes", "on"}
 
 
 def _get_path(name: str, default: str) -> Path:
@@ -53,6 +59,7 @@ class Settings:
     smtp_password: str
     email_from: str
     default_recipient_email: str
+    email_dry_run: bool
 
     def smtp_is_configured(self) -> bool:
         """True if the minimum email settings are filled in."""
@@ -78,6 +85,9 @@ def load_settings() -> Settings:
         smtp_password=_get_str("SMTP_PASSWORD"),
         email_from=_get_str("EMAIL_FROM"),
         default_recipient_email=_get_str("DEFAULT_RECIPIENT_EMAIL"),
+        email_dry_run=_get_bool("EMAIL_DRY_RUN", True),
     )
 
+
+# Other files do:  from config.settings import settings
 settings = load_settings()

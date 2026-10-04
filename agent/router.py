@@ -23,6 +23,12 @@ EMAIL_AFTER_CONNECTOR = re.compile(
     r"\b(?:and|then)\s+(?:send|e-?mail|mail|forward)\b", re.IGNORECASE
 )
 
+# "send email", "send me an email", "write an email" ANYWHERE in the message
+EMAIL_PHRASE = re.compile(
+    r"\b(?:send|write|draft|compose)\s+(?:me\s+|us\s+)?(?:an?\s+|the\s+)?e-?mail\b",
+    re.IGNORECASE,
+)
+
 # "hi", "hello there", "thanks", "help me"
 GREETING = re.compile(
     r"^\s*(?:hi|hello|hey|thanks|thank you|help)(?:\s+\w+)?[\s.!?]*$", re.IGNORECASE
@@ -52,6 +58,7 @@ def is_email_request(text: str) -> bool:
         EMAIL_ADDRESS.search(text)
         or EMAIL_COMMAND.search(text)
         or EMAIL_AFTER_CONNECTOR.search(text)
+        or EMAIL_PHRASE.search(text)
     )
 
 
@@ -77,7 +84,9 @@ def build_email_query(text: str) -> str:
     """Keep only the topic, removing the email address and the 'send me' part."""
     query = EMAIL_ADDRESS.sub("", text)
     query = EMAIL_COMMAND.sub("", query, count=1)
+    query = EMAIL_PHRASE.sub("", query)
     query = re.sub(r"\s+(?:at|to|for)\b[\s.!?]*$", "", query, flags=re.IGNORECASE)
+    query = re.sub(r"\s+about\s+(?:it|this|that)[\s.!?]*$", "", query, flags=re.IGNORECASE)
     query = re.sub(r"^\s*(?:me|us)\b\s*", "", query, flags=re.IGNORECASE)
     query = " ".join(query.split()).strip(" .,!?")
     return query or text

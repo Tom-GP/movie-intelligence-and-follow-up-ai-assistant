@@ -97,12 +97,13 @@ def answer_from_results(
     results: list[SearchResult],
     movie_title: str | None = None,
     generate_fn: LLMFunction = generate,
+    system_prompt: str = SYSTEM_PROMPT,
 ) -> Answer:
     """Ask the LLM to answer from chunks we already have, and attach citations."""
     if not results:
         return Answer(NO_RESULTS_TEXT, [], False, movie_title)
 
-    reply = generate_fn(SYSTEM_PROMPT, build_user_prompt(question, results)).strip()
+    reply = generate_fn(system_prompt, build_user_prompt(question, results)).strip()
     if reply.startswith(NOT_FOUND_TEXT):
         return Answer(NOT_FOUND_TEXT, [], False, movie_title)
 

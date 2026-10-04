@@ -47,7 +47,7 @@ class AgentRequest(BaseModel):
 class AgentResponse(BaseModel):
     """What the agent sends back to the user interface."""
 
-    kind: Literal["answer", "clarification", "email_pending"]
+    kind: Literal["answer", "clarification", "email_sent", "error"]
     text: str
     sources: list[str] = Field(default_factory=list)
     request: AgentRequest

@@ -16,6 +16,17 @@ Rules:
 6. Only if the excerpts contain nothing relevant to the question, reply with exactly this sentence and nothing else: {NOT_FOUND_TEXT}
 7. Keep the answer short and clear (2-5 sentences)."""
 
+# Used when the question is about the whole movie ("tell the story of ...").
+SUMMARY_SYSTEM_PROMPT = f"""You summarize a movie's story using ONLY the numbered subtitle excerpts you are given. The excerpts are spread across the whole movie in story order, and parts of the movie between them are missing.
+
+Rules:
+1. Describe what happens and who does what, in order, using only the excerpts. Do not use outside knowledge about the movie and do not invent events.
+2. After each claim, add the number of the excerpt that supports it, like [3]. Only use numbers that exist.
+3. Never write timestamps or a "Sources" list. The system adds the sources itself.
+4. Ignore song lyrics and repeated chants. Focus on events, conflicts and decisions. Subtitles often do not name the speaker, so name a character only when an excerpt makes it clear.
+5. Because parts are missing, do not claim to know how the story ends unless an excerpt shows it.
+6. Write 4-8 sentences in plain language. Only if the excerpts contain no dialogue about the story at all, reply with exactly this sentence and nothing else: {NOT_FOUND_TEXT}"""
+
 
 def build_context(results: list[SearchResult]) -> str:
     """Number the excerpts [1], [2], ... so the LLM can point at them."""
