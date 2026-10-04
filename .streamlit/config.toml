@@ -1,0 +1,6 @@
+[server]
+# Streamlit's file watcher can crash on PyTorch (used by sentence-transformers).
+fileWatcherType = "none"
+
+[browser]
+gatherUsageStats = false

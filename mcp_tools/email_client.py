@@ -51,15 +51,28 @@ async def _with_session(
             return await action(session)
 
 
+def _new_event_loop() -> asyncio.AbstractEventLoop:
+    """A loop that can start subprocesses, even inside Streamlit on Windows."""
+    if sys.platform == "win32":
+        return asyncio.ProactorEventLoop()
+    return asyncio.new_event_loop()
+
+
 def _run(action: Callable[[ClientSession], Awaitable[T]], dry_run: bool | None = None) -> T:
     """Run one action against the server and return its result."""
+    loop = _new_event_loop()
     try:
-        return asyncio.run(
+        return loop.run_until_complete(
             asyncio.wait_for(_with_session(action, dry_run), timeout=TIMEOUT_SECONDS)
         )
     except Exception as error:
         detail = str(error) or type(error).__name__
         raise EmailSendError(f"Could not use the email tool: {detail}") from error
+    finally:
+        try:
+            loop.run_until_complete(loop.shutdown_asyncgens())
+        finally:
+            loop.close()
 
 
 def send_email_via_mcp(
@@ -82,7 +95,7 @@ def send_email_via_mcp(
 
 
 def get_email_status(dry_run: bool | None = None) -> str:
-    """Ask the server whether it is ready (the UI sidebar uses this in Phase 7)."""
+    """Ask the server whether it is ready (the UI sidebar uses this)."""
 
     async def action(session: ClientSession) -> str:
         result = await session.call_tool("email_status", {})

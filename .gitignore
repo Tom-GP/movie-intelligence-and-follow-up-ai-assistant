@@ -1,4 +1,4 @@
-# Secrets
+# Secrets (API keys, the Gmail App Password)
 .env
 
 # Virtual environment
@@ -10,6 +10,16 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
-# Generated data
+# Generated data: rebuilt by python -m scripts.ingest_movies
 data/chroma_db/
 data/processed/
+
+# Copyrighted subtitle files: never commit them...
+data/subtitles/*.srt
+# ...except our own invented sample movies:
+!data/subtitles/dust_and_thunder.srt
+!data/subtitles/orbit_seven.srt
+!data/subtitles/the_lighthouse_keeper.srt
+
+# Optional: ignore even the short phrases from real subtitles in the evaluation file
+# data/eval/real_questions.json

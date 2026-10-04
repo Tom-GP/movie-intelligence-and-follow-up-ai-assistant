@@ -1,15 +1,21 @@
 """Turns text into embeddings (lists of numbers) using sentence-transformers."""
 
 from functools import lru_cache
-
-from sentence_transformers import SentenceTransformer
+from typing import TYPE_CHECKING
 
 from config.settings import settings
 
+if TYPE_CHECKING:
+    from sentence_transformers import SentenceTransformer
+
 
 @lru_cache(maxsize=1)
-def get_embedding_model() -> SentenceTransformer:
+def get_embedding_model() -> "SentenceTransformer":
     """Load the model once and reuse it (loading is slow)."""
+    # Imported here, not at the top of the file, so that merely importing this
+    # module is fast. PyTorch only loads when the model is really needed.
+    from sentence_transformers import SentenceTransformer
+
     return SentenceTransformer(settings.embedding_model_name)
 
 
