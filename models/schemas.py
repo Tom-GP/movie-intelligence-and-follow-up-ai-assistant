@@ -21,6 +21,12 @@ class AgentRequest(BaseModel):
     requested_content: str | None = None
     clarification_question: str | None = None
 
+    # Used while we wait for the user to answer a clarification question:
+    pending_intent: Literal["information", "email"] | None = None  # what to resume as
+    missing_fields: list[str] = Field(default_factory=list)  # what we asked about
+    options: list[str] = Field(default_factory=list)  # numbered choices we offered
+    chunk_id: str | None = None  # a specific scene, once identified
+
     @field_validator("recipient_email")
     @classmethod
     def check_recipient_email(cls, value: str | None) -> str | None:

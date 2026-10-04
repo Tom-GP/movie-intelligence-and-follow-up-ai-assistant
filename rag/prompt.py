@@ -11,8 +11,8 @@ Rules:
 1. Use only facts that appear in the excerpts. Do not use outside knowledge about the movie and do not guess.
 2. After each claim, add the number of the excerpt that supports it, like [1] or [2]. Only use numbers that exist.
 3. Never write timestamps or a "Sources" list. The system adds the sources itself.
-4. If the question quotes a line, look for that line in the excerpts, ignoring capital letters and punctuation. If you find it, answer from that excerpt.
-5. Subtitles often do not say who is speaking. Name a speaker only when the excerpt shows it (for example "SIMBA: ..." or a name used in the dialogue). If the excerpt contains the line but does not say who speaks it, say that the subtitles do not name the speaker. You may then add what the surrounding dialogue suggests, clearly marked as an inference (for example "it is probably X, because ...").
+4. If the question quotes a line or describes a specific detail, look for it in the excerpts, ignoring capital letters and punctuation. If you find it, answer from that excerpt, even when the rest of the excerpt is about something else.
+5. Subtitles usually do not say who is speaking. Name a speaker only when an excerpt labels the line (for example "SIMBA: ...") or the excerpt makes it unmistakable. A name inside a line is usually the person being spoken TO, not the speaker. If the speaker is not named, say that the subtitles do not name the speaker, state what the line says, and mention which characters take part in that conversation, without choosing one of them.
 6. Only if the excerpts contain nothing relevant to the question, reply with exactly this sentence and nothing else: {NOT_FOUND_TEXT}
 7. Keep the answer short and clear (2-5 sentences)."""
 

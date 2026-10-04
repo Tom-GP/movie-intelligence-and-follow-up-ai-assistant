@@ -1,4 +1,11 @@
-from rag.retriever import detect_movie_title, filter_relevant
+from rag.retriever import (
+    content_words,
+    detect_movie_title,
+    filter_relevant,
+    fuse_rankings,
+    keyword_scores,
+    keyword_search,
+)
 from rag.vector_store import SearchResult
 
 TITLES = ["Dust and Thunder", "Orbit Seven", "The Lion King", "The Dictator"]
@@ -36,3 +43,31 @@ def test_filter_relevant_drops_weak_results():
     results = [make_result(0.45), make_result(0.10), make_result(0.20)]
     kept = filter_relevant(results, min_score=0.20)
     assert [r.score for r in kept] == [0.45, 0.20]
+
+
+def test_content_words_drop_common_words():
+    words = content_words("What does Mufasa tell Simba about the stars?")
+    assert words == ["mufasa", "simba", "star"]
+
+
+def test_keyword_scores_favor_rare_words():
+    texts = ["mufasa simba talk", "mufasa simba stars", "mufasa simba king"]
+    scores = keyword_scores(["mufasa", "simba", "star"], texts)
+    assert scores[0] == 0.0  # only has the common words
+    assert scores[2] == 0.0
+    assert scores[1] > 0.0  # has the rare word "stars"
+
+
+def test_fuse_rankings_rewards_chunks_found_by_both_methods():
+    order = fuse_rankings([["a", "b", "c"], ["c", "d"]])
+    assert order == ["c", "a", "b", "d"]
+
+
+def test_fuse_rankings_keeps_chunks_found_by_only_one_method():
+    order = fuse_rankings([["a"], ["b"]])
+    assert set(order) == {"a", "b"}
+
+
+def test_keyword_search_finds_an_exact_word(sample_store):
+    hits = keyword_search("Why is the lamp logbook missing a page?", collection=sample_store)
+    assert [hit.chunk_id for hit in hits] == ["the_lighthouse_keeper_0001"]

@@ -1,11 +1,13 @@
-"""The main agent: route the message, then send it to the right place."""
+"""The main agent: route the message, check for ambiguity, then act."""
 
 from chromadb.api.models.Collection import Collection
 
+from agent.ambiguity import apply_reply, check_ambiguity, load_chunk
 from agent.router import route_request
+from config.settings import settings
 from models.schemas import AgentRequest, AgentResponse
 from rag.llm import generate
-from rag.qa import LLMFunction, answer_question
+from rag.qa import LLMFunction, answer_from_results, answer_question
 from rag.vector_store import list_movie_titles
 
 
@@ -16,12 +18,22 @@ def _or_not_given(value: str | None) -> str:
 def _handle_information(
     request: AgentRequest, collection: Collection | None, generate_fn: LLMFunction
 ) -> AgentResponse:
-    answer = answer_question(
-        request.query or request.original_message,
-        movie_title=request.movie_title,
-        collection=collection,
-        generate_fn=generate_fn,
-    )
+    question = request.query or request.original_message
+
+    pinned_chunk = load_chunk(request.chunk_id, collection) if request.chunk_id else None
+    if pinned_chunk is not None:
+        # A specific scene was identified: answer from exactly that scene.
+        answer = answer_from_results(
+            question, [pinned_chunk], request.movie_title, generate_fn
+        )
+    else:
+        answer = answer_question(
+            question,
+            movie_title=request.movie_title,
+            collection=collection,
+            generate_fn=generate_fn,
+        )
+
     return AgentResponse(
         kind="answer",
         text=answer.text,
@@ -45,11 +57,25 @@ def _handle_email(request: AgentRequest) -> AgentResponse:
 
 def handle_message(
     message: str,
+    pending: AgentRequest | None = None,
     collection: Collection | None = None,
     generate_fn: LLMFunction = generate,
 ) -> AgentResponse:
-    """Process one user message and return the agent's response."""
-    request = route_request(message, list_movie_titles(collection))
+    """Process one user message.
+
+    `pending` is the request from the previous turn if the agent asked a
+    clarification question and is now waiting for the answer.
+    """
+    known_titles = list_movie_titles(collection)
+    default_recipient = settings.default_recipient_email
+
+    request = None
+    if pending is not None:
+        request = apply_reply(pending, message, known_titles, default_recipient, collection)
+    if request is None:
+        request = route_request(message, known_titles)
+
+    request = check_ambiguity(request, collection, default_recipient)
 
     if request.intent == "clarification":
         return AgentResponse(

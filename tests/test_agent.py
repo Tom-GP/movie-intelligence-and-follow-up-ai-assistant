@@ -52,3 +52,40 @@ def test_movie_in_message_limits_the_search(sample_store):
     )
     assert response.kind == "answer"
     assert response.sources[0].startswith("[1] Orbit Seven")
+
+
+def test_follow_up_reply_completes_the_request(sample_store):
+    first = handle_message(
+        'Who says "I know"?',
+        collection=sample_store,
+        generate_fn=must_not_be_called,
+    )
+    assert first.kind == "clarification"
+    assert "3 movies" in first.text
+
+    second = handle_message(
+        "Orbit Seven",
+        pending=first.request,
+        collection=sample_store,
+        generate_fn=fake_llm("Captain Reyes says it [1]."),
+    )
+    assert second.kind == "answer"
+    assert second.sources == ["[1] Orbit Seven — 00:02:14–00:02:58"]
+
+
+def test_unrelated_reply_starts_a_new_request(sample_store):
+    first = handle_message(
+        "Email Sarah a summary of Orbit Seven",
+        collection=sample_store,
+        generate_fn=must_not_be_called,
+    )
+    assert first.kind == "clarification"
+    assert first.request.missing_fields == ["recipient_email"]
+
+    second = handle_message(
+        "Why is the lamp logbook missing a page?",
+        pending=first.request,
+        collection=sample_store,
+        generate_fn=fake_llm("A page was torn out [1]."),
+    )
+    assert second.kind == "answer"

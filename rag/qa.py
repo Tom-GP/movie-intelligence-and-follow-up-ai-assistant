@@ -92,6 +92,28 @@ def build_citations(results: list[SearchResult], numbers: list[int]) -> list[Cit
 LLMFunction = Callable[[str, str], str]
 
 
+def answer_from_results(
+    question: str,
+    results: list[SearchResult],
+    movie_title: str | None = None,
+    generate_fn: LLMFunction = generate,
+) -> Answer:
+    """Ask the LLM to answer from chunks we already have, and attach citations."""
+    if not results:
+        return Answer(NO_RESULTS_TEXT, [], False, movie_title)
+
+    reply = generate_fn(SYSTEM_PROMPT, build_user_prompt(question, results)).strip()
+    if reply.startswith(NOT_FOUND_TEXT):
+        return Answer(NOT_FOUND_TEXT, [], False, movie_title)
+
+    numbers = extract_cited_numbers(reply, max_number=len(results))
+    if not numbers:
+        # The LLM forgot the markers: fall back to listing every excerpt we gave it.
+        numbers = list(range(1, len(results) + 1))
+
+    return Answer(reply, build_citations(results, numbers), True, movie_title)
+
+
 def answer_question(
     question: str,
     movie_title: str | None = None,
@@ -111,16 +133,4 @@ def answer_question(
         min_score=min_score,
         collection=collection,
     )
-    if not results:
-        return Answer(NO_RESULTS_TEXT, [], False, movie_title)
-
-    reply = generate_fn(SYSTEM_PROMPT, build_user_prompt(question, results)).strip()
-    if reply.startswith(NOT_FOUND_TEXT):
-        return Answer(NOT_FOUND_TEXT, [], False, movie_title)
-
-    numbers = extract_cited_numbers(reply, max_number=len(results))
-    if not numbers:
-        # The LLM forgot the markers: fall back to listing every excerpt we gave it.
-        numbers = list(range(1, len(results) + 1))
-
-    return Answer(reply, build_citations(results, numbers), True, movie_title)
+    return answer_from_results(question, results, movie_title, generate_fn)
