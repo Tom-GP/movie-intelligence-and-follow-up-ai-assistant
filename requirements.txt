@@ -1,5 +1,5 @@
-streamlit
-pydantic
+streamlit>=1.28
+pydantic>=2
 python-dotenv
 pysrt
 chromadb
